@@ -1,0 +1,30 @@
+name: ci-workflow
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [main, dev]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Build and test what the repository has
+        run: |
+          if [ -f package.json ]; then
+            npm ci
+            npm test --if-present
+          elif [ -x ./gradlew ]; then
+            ./gradlew build
+          else
+            echo "Nothing to build or test yet."
+          fi
